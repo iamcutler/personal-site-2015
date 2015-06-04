@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     del = require('del'), // Deletes files & folders
     rename = require('gulp-rename'), // Allows renaming
     autoprefixer = require('gulp-autoprefixer'), // Adds CSS browser prefixes
+    less = require('gulp-less'), // Less
     minifycss = require('gulp-minify-css'), // Minifies CSS
     webpack = require('gulp-webpack'), // Asset compiler. Currently only used for JS
     //imagemin = require('gulp-imagemin'), // Minifies images
@@ -17,8 +18,8 @@ gulp.task('default', taskDefault);
 gulp.task('all', taskAll); // Do all tasks, except watch
 
 // Sub Tasks
-gulp.task('css', taskCss); // Do cssOmni and cssSpecific tasks
-gulp.task('html', taskHtml);
+gulp.task('css', taskCss);
+gulp.task('htmlMain', taskHtmlMain);
 gulp.task('js', taskJs);
 gulp.task('images', taskImages);
 
@@ -34,36 +35,30 @@ function taskDefault() {
     console.log('Here are the current Gulp commands:');
     console.log('gulp all - Do all tasks, except watch');
     console.log('gulp css - Process all CSS');
-    console.log('gulp html - Process all HTML');
     console.log('gulp js - Process all JS');
     console.log('gulp images - Process all images');
     console.log('gulp watch - Watch for any changes in files and run the appropriate task');
 }
 
 function taskAll() {
-    gulp.start('html', 'images');
-}
-
-function taskCore() {
-    gulp.start('css', 'html', 'js');
+    gulp.start('htmlMain', 'css', 'images');
 }
 
 function taskCss() {
-    gulp.start('cssSpecific');
+    gulp.start('css');
 }
 
-function taskCssSpecific() {
-    return gulp.src('app/public-dev/css/*')
+function taskCss() {
+    return gulp.src('app/public-dev/css/*.less')
         .pipe(less())
         .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 10', 'opera 12.1', 'ios 6', 'android 4'))
-        .pipe(gulp.dest('app/public/css'))
         .pipe(rename({suffix: '.min'}))
         .pipe(minifycss())
         .pipe(gulp.dest('app/public/css'));
 }
 
-function taskHtml() {
-    return gulp.src('app/public-dev/html/*.html')
+function taskHtmlMain() {
+    return gulp.src('app/public-dev/index.html')
         .pipe(minifyhtml({
             empty: true,
             cdata: true,
@@ -72,7 +67,7 @@ function taskHtml() {
             spare: true,
             quotes: true
         }))
-        .pipe(gulp.dest('app/public/html'));
+        .pipe(gulp.dest('app/public'));
 }
 
 function taskJs() {
@@ -106,14 +101,14 @@ function monitor(isSync) {
         });
     }
 
-    gulp.watch('app/public-dev/html/*.html', ['html', secondaryTask]);
+    gulp.watch('app/public-dev/index.html', ['html', secondaryTask]);
     gulp.watch('app/public-dev/assets/*', ['images', secondaryTask]);
     gulp.watch('app/public-dev/js/*.jsx', ['js', secondaryTask]);
 
     console.log('So Gulp is now watching for changes, even though it will say "Finished". Just press CTRL+C to stop.');
 
     function secondaryTask() {
-        if(isSync){
+        if(isSync) {
             browserSync.reload();
         }
     }
